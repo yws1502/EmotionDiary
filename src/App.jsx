@@ -1,7 +1,7 @@
 import './App.css';
 import DiaryEditor from './DiaryEditor';
 import DiaryList from './DiaryList';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
 
 function App() {
   const [data, setData] = useState([]);
@@ -30,7 +30,7 @@ function App() {
     getData();
   }, []);
 
-  const onCreate = (author, content, emotion) => {
+  const onCreate = useCallback((author, content, emotion) => {
     const createdDate = new Date().getTime();
     const newData = {
       author,
@@ -40,19 +40,20 @@ function App() {
       id: dataId.current,
     };
     dataId.current += 1;
-    setData([newData, ...data]);
-  };
+    setData(prevData => [newData, ...prevData]);
+  }, []);
 
-  const onRemove = targetId => {
-    const newData = data.filter(it => it.id !== targetId);
-    setData(newData);
-  };
+  const onRemove = useCallback(targetId => {
+    setData(prevData => prevData.filter(it => it.id !== targetId));
+  }, []);
 
-  const onUpdate = (targetId, newContent) => {
-    setData(
-      data.map(it => (it.id === targetId ? { ...it, content: newContent } : it))
+  const onUpdate = useCallback((targetId, newContent) => {
+    setData(prevData =>
+      prevData.map(it =>
+        it.id === targetId ? { ...it, content: newContent } : it
+      )
     );
-  };
+  }, []);
 
   const getDiaryAnalysis = useMemo(() => {
     const goodCount = data.filter(it => it.emotion >= 3).length;
